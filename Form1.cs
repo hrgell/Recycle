@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -136,6 +136,34 @@ namespace TreeViewTest
             tv.SelectedNode = tv.GetNodeAt(targetPoint);
         }
 
+        private void DropFiles(object sender, DragEventArgs e, TreeNode destination, TreeNodeCollection nodes)
+        {
+            int idx = (destination != null) ? destination.Index : 0;
+            if (InsertAfter)
+                ++idx;
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            TreeNode first = null;
+            TreeNode last = null;
+            foreach (string filename in files)
+            {
+                //Debug(filename);
+                TreeNode node = nodes.Insert(idx, filename, filename);
+                if (first == null)
+                {
+                    first = node;
+                }
+                last = node;
+                ++idx;
+            }
+
+            if (ExpandOnDrop)
+            {
+                if (ExpandOnDropFirst)
+                    first.EnsureVisible();
+                else
+                    last.EnsureVisible();
+            }
+        }
 
         private void Tv1_DragDrop(object sender, DragEventArgs e)
         {
@@ -167,24 +195,28 @@ namespace TreeViewTest
             {
                 if (e.Data.GetDataPresent(DataFormats.FileDrop))
                 {
-                    int idx = (destination != null) ? destination.Index : 0;
-                    if (InsertAfter)
-                        ++idx;
-                    string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                    foreach (string filename in files)
-                    {
-                        //Debug(filename);
-                        TreeNode node = nodes.Insert(idx, filename, filename);
-                        ++idx;
-                    }
+                    DropFiles(sender, e, destination, nodes);
                 }
                 return;
+
             }
             if (source.Equals(destination))
                 return;
             //if (destination != null)
             //    tv.SelectedNode = destination;
-            if (e.Effect == DragDropEffects.Move)
+
+            TreeView srcview = source.TreeView;
+
+            // Dont allow nodes from Tv1 to drop on itself.
+            if (tv == Tv1 && srcview == Tv1)
+                return;
+            bool remove = false;
+
+            if(int.Parse((string)srcview.Tag) > int.Parse((string)tv.Tag))
+            {
+                source.Remove();
+            }
+            else  if (e.Effect == DragDropEffects.Move)
             {
                 source.Remove();
                 //TreeNode node = nodes.Add(source.Text, source.Text);
@@ -192,6 +224,16 @@ namespace TreeViewTest
             }
             else if (e.Effect == DragDropEffects.Copy)
             {
+#if false
+                TreeNode[] xx = nodes.Find(source.Text, true);
+                if (xx.Length > 0)
+                {
+                    return;
+                }
+#else
+                if (nodes.ContainsKey(source.Text))
+                    return;
+#endif
                 TreeNode node = (TreeNode)source.Clone();
                 //int idx = nodes.Add(node);
                 //TreeNode node2 = nodes[idx];
@@ -207,7 +249,7 @@ namespace TreeViewTest
                 if (InsertAfter)
                     ++idx;
                 nodes.Insert(idx, node);
-                if(ExpandOnDrop)
+                if (ExpandOnDrop)
                     node.EnsureVisible();
             }
             if (destination != null)
@@ -228,8 +270,19 @@ namespace TreeViewTest
 
         private void TestTv1(string key)
         {
-            bool rst = Tv1.Nodes.ContainsKey(key);
-            Debug("TestTv1: " + rst.ToString());
+            //bool rst1 = Tv1.Nodes.ContainsKey(key);
+            TreeNode[] nodes = Tv1.Nodes.Find(key, true);
+            bool rst2 = nodes.Length > 0;
+            Debug("TestTv1: " + rst2.ToString());
+        }
+
+        private TreeNode GetRootNode(TreeNode node)
+        {
+            while (node.Parent != null)
+            {
+                node = node.Parent;
+            }
+            return node;
         }
 
         private void Btn3_Click(object sender, EventArgs e)
