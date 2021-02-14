@@ -4,10 +4,10 @@ using System.Windows.Forms;
 
 // Add settings:
 //
+// DropIntoFolder
 // ExpandOnDrop
 // ExpandOnDropFirst First/Last - when dropping multiple
 // InsertAfter True/False - insert before or after the row we drop on.
-// DropIntoFolder
 
 namespace TreeViewTest
 {
@@ -15,10 +15,10 @@ namespace TreeViewTest
     {
         long mycount = 0;
         //TODO Add these setting 
+        bool DropIntoFolder = true; // drop into folder instead of after.
         bool ExpandOnDrop = true; // expand the folder the items are dopped into
         bool ExpandOnDropFirst = false; // when dropping multiple focus on first or last copied.
         bool InsertAfter = true; // insert after the row we drop on ?
-        bool DropIntoFolder = true; // drop into folder instead of after.
 
         public Form1()
         {
@@ -140,12 +140,42 @@ namespace TreeViewTest
             tv.SelectedNode = tv.GetNodeAt(targetPoint);
         }
 
-        private void DropFiles(object sender, DragEventArgs e, TreeNode destination, TreeNodeCollection nodes)
+        private int GetInsertionIdx(string txt, TreeNode destination, TreeNodeCollection nodes)
         {
+            if (nodes.ContainsKey(txt)) // (nodes.Find(source.Text, true).Length > 0)
+                return -1;
+            int idx = 0;
+            if (destination != null)
+            {
+                if (destination.Nodes.Count > 0 && DropIntoFolder)
+                    idx = destination.Nodes.Count;
+                else
+                    idx = (destination != null) ? destination.Index : 0;
+            }
+            if (InsertAfter)
+                ++idx;
+            return idx;
+        }
+
+        private void DropNode(TreeNode source, TreeNode destination, TreeNodeCollection nodes)
+        {
+            if (nodes.ContainsKey(source.Text)) // (nodes.Find(source.Text, true).Length > 0)
+                return;
+            TreeNode node = (TreeNode)source.Clone();
+            int idx = GetInsertionIdx(source.Text, destination, nodes);
+            if (idx < 0)
+                return;
+            nodes.Insert(idx, node);
+            if (ExpandOnDrop)
+                node.EnsureVisible();
+        }
+
+        private void DropFiles(string[] files, TreeNode destination, TreeNodeCollection nodes)
+        {
+            // GetInsertionIdx
             int idx = (destination != null) ? destination.Index : 0;
             if (InsertAfter)
                 ++idx;
-            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
             TreeNode first = null;
             TreeNode last = null;
             foreach (string filename in files)
@@ -201,54 +231,38 @@ namespace TreeViewTest
             {
                 if (e.Data.GetDataPresent(DataFormats.FileDrop))
                 {
-                    DropFiles(sender, e, destination, nodes);
+                    string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                    DropFiles(files, destination, nodes);
                 }
                 return;
 
             }
             if (source.Equals(destination))
                 return;
-            //if (destination != null)
-            //    tv.SelectedNode = destination;
 
-            TreeView srcview = source.TreeView;
+            TreeView tvsource = source.TreeView;
 
             // Dont allow nodes from Tv1 to drop on itself.
-            if (tv == Tv1 && srcview == Tv1)
+            if (tv == Tv1 && tvsource == Tv1)
                 return;
-            bool remove = false;
 
-            if(int.Parse((string)srcview.Tag) > int.Parse((string)tv.Tag))
+            // Delete nodes dragged to the left
+            if (int.Parse((string)tvsource.Tag) > int.Parse((string)tv.Tag))
             {
                 source.Remove();
+                return;
             }
-            else  if (e.Effect == DragDropEffects.Move)
+
+            // Add nodes dragged to the right
+            if (e.Effect == DragDropEffects.Move)
             {
-                source.Remove();
+                //source.Remove();
                 //TreeNode node = nodes.Add(source.Text, source.Text);
                 //node.EnsureVisible();
             }
             else if (e.Effect == DragDropEffects.Copy)
             {
-                if (nodes.ContainsKey(source.Text)) // (nodes.Find(source.Text, true).Length > 0)
-                    return;
-                TreeNode node = (TreeNode)source.Clone();
-                //int idx = nodes.Add(node);
-                //TreeNode node2 = nodes[idx];
-                int idx = 0;
-                if (destination != null && destination.Nodes.Count > 0 && DropIntoFolder)
-                {
-                    idx = destination.Nodes.Count;
-                }
-                else
-                {
-                    idx = (destination != null) ? destination.Index : 0;
-                }
-                if (InsertAfter)
-                    ++idx;
-                nodes.Insert(idx, node);
-                if (ExpandOnDrop)
-                    node.EnsureVisible();
+                DropNode(source, destination, nodes);
             }
             if (destination != null)
             {
