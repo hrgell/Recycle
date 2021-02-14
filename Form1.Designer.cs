@@ -1,4 +1,4 @@
-﻿
+
 namespace TreeViewTest
 {
     partial class Form1
@@ -42,10 +42,11 @@ namespace TreeViewTest
             // Tv1
             // 
             this.Tv1.AllowDrop = true;
-            this.Tv1.Location = new System.Drawing.Point(42, 26);
+            this.Tv1.Location = new System.Drawing.Point(12, 26);
             this.Tv1.Name = "Tv1";
-            this.Tv1.Size = new System.Drawing.Size(156, 157);
+            this.Tv1.Size = new System.Drawing.Size(329, 157);
             this.Tv1.TabIndex = 0;
+            this.Tv1.Tag = "1";
             this.Tv1.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.Tv1_ItemDrag);
             this.Tv1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.Tv1_AfterSelect);
             this.Tv1.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.Tv1_NodeMouseClick);
@@ -58,10 +59,11 @@ namespace TreeViewTest
             // Tv2
             // 
             this.Tv2.AllowDrop = true;
-            this.Tv2.Location = new System.Drawing.Point(214, 26);
+            this.Tv2.Location = new System.Drawing.Point(348, 26);
             this.Tv2.Name = "Tv2";
-            this.Tv2.Size = new System.Drawing.Size(156, 157);
+            this.Tv2.Size = new System.Drawing.Size(329, 157);
             this.Tv2.TabIndex = 1;
+            this.Tv2.Tag = "2";
             this.Tv2.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.Tv1_ItemDrag);
             this.Tv2.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.Tv1_AfterSelect);
             this.Tv2.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.Tv1_NodeMouseClick);
@@ -74,10 +76,11 @@ namespace TreeViewTest
             // Tv3
             // 
             this.Tv3.AllowDrop = true;
-            this.Tv3.Location = new System.Drawing.Point(383, 26);
+            this.Tv3.Location = new System.Drawing.Point(685, 26);
             this.Tv3.Name = "Tv3";
-            this.Tv3.Size = new System.Drawing.Size(156, 157);
+            this.Tv3.Size = new System.Drawing.Size(329, 157);
             this.Tv3.TabIndex = 2;
+            this.Tv3.Tag = "3";
             this.Tv3.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.Tv1_ItemDrag);
             this.Tv3.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.Tv1_AfterSelect);
             this.Tv3.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.Tv1_NodeMouseClick);
@@ -90,10 +93,11 @@ namespace TreeViewTest
             // Tv4
             // 
             this.Tv4.AllowDrop = true;
-            this.Tv4.Location = new System.Drawing.Point(548, 26);
+            this.Tv4.Location = new System.Drawing.Point(1022, 26);
             this.Tv4.Name = "Tv4";
-            this.Tv4.Size = new System.Drawing.Size(156, 157);
+            this.Tv4.Size = new System.Drawing.Size(329, 157);
             this.Tv4.TabIndex = 3;
+            this.Tv4.Tag = "4";
             this.Tv4.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.Tv1_ItemDrag);
             this.Tv4.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.Tv1_AfterSelect);
             this.Tv4.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.Tv1_NodeMouseClick);
@@ -105,6 +109,7 @@ namespace TreeViewTest
             // 
             // Btn1
             // 
+            this.Btn1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.Btn1.Location = new System.Drawing.Point(258, 443);
             this.Btn1.Name = "Btn1";
             this.Btn1.Size = new System.Drawing.Size(75, 23);
@@ -115,6 +120,7 @@ namespace TreeViewTest
             // 
             // Btn2
             // 
+            this.Btn2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.Btn2.Location = new System.Drawing.Point(349, 443);
             this.Btn2.Name = "Btn2";
             this.Btn2.Size = new System.Drawing.Size(75, 23);
@@ -125,6 +131,7 @@ namespace TreeViewTest
             // 
             // Btn3
             // 
+            this.Btn3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.Btn3.Location = new System.Drawing.Point(441, 443);
             this.Btn3.Name = "Btn3";
             this.Btn3.Size = new System.Drawing.Size(75, 23);
@@ -135,18 +142,21 @@ namespace TreeViewTest
             // 
             // Txt1
             // 
-            this.Txt1.Location = new System.Drawing.Point(42, 208);
+            this.Txt1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.Txt1.Location = new System.Drawing.Point(12, 208);
             this.Txt1.Multiline = true;
             this.Txt1.Name = "Txt1";
             this.Txt1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.Txt1.Size = new System.Drawing.Size(662, 200);
+            this.Txt1.Size = new System.Drawing.Size(1339, 200);
             this.Txt1.TabIndex = 7;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 478);
+            this.ClientSize = new System.Drawing.Size(1363, 492);
             this.Controls.Add(this.Txt1);
             this.Controls.Add(this.Btn3);
             this.Controls.Add(this.Btn2);
