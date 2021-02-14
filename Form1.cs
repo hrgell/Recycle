@@ -1,16 +1,58 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 
-// Add settings:
-//
+// # Add settings
 // DropIntoFolder
 // ExpandOnDrop
 // ExpandOnDropFirst First/Last - when dropping multiple
 // InsertAfter True/False - insert before or after the row we drop on.
 
+// # Notes on dropping a source node on a NodeList possibly on a target node
+//
+// Dragging and dropping stuff from right to left causes the stuff dragged to be deleted from the source treeview.
+// Dragging and dropping stuff from left to the right causes the stuff dragged to be added to the target treeview.
+//
+// Don't drop it if:
+// The NodeList's immediate child nodes matches on the basename wise.
+//
+// Don't drop file/module (not folder) if:
+// The NodeList's child nodes or parent nodes contains a node with the same basename.
+// 
+// # T1
+//
+// # T3
+//
+// # T4
+//
+//
+
 namespace TreeViewTest
 {
+    public class NodeTag
+    {
+        public string Filename { get; set; }
+        public string Basename { get; set; }
+        public bool IsFolder { get; set; }
+
+        public NodeTag(string filename, bool isfolder)
+        {
+            Filename = filename;
+            Basename = Path.GetFileNameWithoutExtension(filename);
+            IsFolder = isfolder;
+        }
+
+        public NodeTag(TreeNode node)
+        {
+            NodeTag tag = node.Tag as NodeTag;
+            Filename = tag.Filename;
+            Basename = tag.Basename;
+            IsFolder = tag.IsFolder;
+        }
+    } // class TreeNodeTag
+
     public partial class Form1 : Form
     {
         long mycount = 0;
@@ -19,6 +61,7 @@ namespace TreeViewTest
         bool ExpandOnDrop = true; // expand the folder the items are dopped into
         bool ExpandOnDropFirst = false; // when dropping multiple focus on first or last copied.
         bool InsertAfter = true; // insert after the row we drop on ?
+        bool Insert = true;
 
         public Form1()
         {
@@ -31,24 +74,59 @@ namespace TreeViewTest
             Txt1.AppendText(msg + Environment.NewLine);
         }
 
+        //public TreeNode FindParent(TreeNode node, string basename)
+        //{
+        //    TreeNodeTag tag = node.Tag as TreeNodeTag;
+        //    if (!tag.IsFolder && tag.Basename.Equals(basename))
+        //        return node;
+        //    if (node.Parent == null)
+        //        return null;
+        //    foreach (TreeNode pnode in node.Parent.Nodes)
+        //    {
+        //        TreeNode found = FindParent(pnode, basename);
+        //        if (found != null)
+        //            return found;
+        //    }
+        //    return null;
+        //}
+
+        public TreeNode AddElement(TreeNodeCollection nodes, int idx, string key, bool isfolder)
+        {
+            NodeTag tag = new NodeTag(Path.GetFileNameWithoutExtension(key), isfolder);
+            TreeNode node = nodes.Insert(idx, key, tag.Basename);
+            node.Tag = tag;
+            return node;
+        }
+
+        public TreeNode AddElement(TreeNodeCollection nodes, int idx, TreeNode source)
+        {
+            //TreeNodeTag tag = source.Tag as TreeNodeTag;
+            TreeNode node = (TreeNode)source.Clone();
+            nodes.Insert(idx, node);
+            return node;
+        }
+
         private void FillTreeView(TreeNodeCollection nodes, string prefix)
         {
-            nodes.Add(prefix + "1", prefix + "1");
-            nodes.Add(prefix + "2", prefix + "2");
-            var node = nodes.Add(prefix + "3", prefix + "3");
-            nodes.Add(prefix + "4", prefix + "4");
-            nodes.Add(prefix + "5", prefix + "5");
+            AddElement(nodes, nodes.Count, prefix + "1", false);
+            AddElement(nodes, nodes.Count, prefix + "2", false);
+            var node3 = AddElement(nodes, nodes.Count, prefix + "3", true);
+            AddElement(nodes, nodes.Count, prefix + "4", false);
+            AddElement(nodes, nodes.Count, prefix + "5", false);
 
-            nodes = node.Nodes;
-            nodes.Add(prefix + "A", prefix + "A");
-            nodes.Add(prefix + "B", prefix + "B");
-            node = nodes.Add(prefix + "C", prefix + "C");
-            nodes.Add(prefix + "D", prefix + "D");
+            nodes = node3.Nodes;
+            AddElement(nodes, nodes.Count, prefix + "A", false);
+            AddElement(nodes, nodes.Count, prefix + "B", false);
+            var nodeC = AddElement(nodes, nodes.Count, prefix + "C", true);
+            AddElement(nodes, nodes.Count, prefix + "D", false);
 
-            nodes = node.Nodes;
-            nodes.Add(prefix + "X", prefix + "X");
-            nodes.Add(prefix + "Y", prefix + "Y");
-            nodes.Add(prefix + "Z", prefix + "Z");
+            nodes = nodeC.Nodes;
+            AddElement(nodes, nodes.Count, prefix + "X", false);
+            var nodeY = AddElement(nodes, nodes.Count, prefix + "Y", false);
+            var nodeZ = AddElement(nodes, nodes.Count, prefix + "Z", true);
+
+            nodes = nodeY.Nodes;
+            AddElement(nodes, nodes.Count, prefix + "W", false);
         } // FillTreeView()
 
         private void InitializeTreeViews()
@@ -165,7 +243,7 @@ namespace TreeViewTest
             int idx = GetInsertionIdx(source.Text, destination, nodes);
             if (idx < 0)
                 return;
-            nodes.Insert(idx, node);
+            AddElement(nodes, idx, node);
             if (ExpandOnDrop)
                 node.EnsureVisible();
         }
@@ -173,6 +251,8 @@ namespace TreeViewTest
         private void DropFiles(string[] files, TreeNode destination, TreeNodeCollection nodes)
         {
             // GetInsertionIdx
+            if (files.Length == 0)
+                return;
             int idx = (destination != null) ? destination.Index : 0;
             if (InsertAfter)
                 ++idx;
@@ -183,11 +263,9 @@ namespace TreeViewTest
                 //Debug(filename);
                 if (nodes.ContainsKey(filename)) // (nodes.Find(source.Text, true).Length > 0)
                     continue;
-                TreeNode node = nodes.Insert(idx, filename, filename);
+                TreeNode node = AddElement(nodes, idx, filename, false);
                 if (first == null)
-                {
                     first = node;
-                }
                 last = node;
                 ++idx;
             }
@@ -233,9 +311,11 @@ namespace TreeViewTest
                 {
                     string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
                     DropFiles(files, destination, nodes);
+                } else
+                {
+                    // unknown source
                 }
                 return;
-
             }
             if (source.Equals(destination))
                 return;
