@@ -16,7 +16,7 @@ namespace TreeViewTest
         long mycount = 0;
         //TODO Add these setting 
         bool ExpandOnDrop = true; // expand the folder the items are dopped into
-        bool ExpandOnDropFirst = true; // when dropping multiple focus on first or last copied.
+        bool ExpandOnDropFirst = false; // when dropping multiple focus on first or last copied.
         bool InsertAfter = true; // insert after the row we drop on ?
         bool DropIntoFolder = true; // drop into folder instead of after.
 
@@ -51,8 +51,12 @@ namespace TreeViewTest
             nodes.Add(prefix + "Z", prefix + "Z");
         } // FillTreeView()
 
-        private void FillTreeViews()
+        private void InitializeTreeViews()
         {
+            Tv1.Nodes.Clear();
+            Tv2.Nodes.Clear();
+            Tv3.Nodes.Clear();
+            Tv4.Nodes.Clear();
             FillTreeView(Tv1.Nodes, "test");
             FillTreeView(Tv2.Nodes, "qwer");
             FillTreeView(Tv3.Nodes, "asdf");
@@ -61,7 +65,7 @@ namespace TreeViewTest
 
         private void Btn1_Click(object sender, EventArgs e)
         {
-            FillTreeViews();
+            InitializeTreeViews();
         }
 
         // Only accepts clicks on the nodes
@@ -147,6 +151,8 @@ namespace TreeViewTest
             foreach (string filename in files)
             {
                 //Debug(filename);
+                if (nodes.ContainsKey(filename)) // (nodes.Find(source.Text, true).Length > 0)
+                    continue;
                 TreeNode node = nodes.Insert(idx, filename, filename);
                 if (first == null)
                 {
@@ -159,11 +165,11 @@ namespace TreeViewTest
             if (ExpandOnDrop)
             {
                 if (ExpandOnDropFirst)
-                    first.EnsureVisible();
+                    first?.EnsureVisible();
                 else
-                    last.EnsureVisible();
+                    last?.EnsureVisible();
             }
-        }
+        } // DropFiles()
 
         private void Tv1_DragDrop(object sender, DragEventArgs e)
         {
@@ -224,16 +230,8 @@ namespace TreeViewTest
             }
             else if (e.Effect == DragDropEffects.Copy)
             {
-#if false
-                TreeNode[] xx = nodes.Find(source.Text, true);
-                if (xx.Length > 0)
-                {
+                if (nodes.ContainsKey(source.Text)) // (nodes.Find(source.Text, true).Length > 0)
                     return;
-                }
-#else
-                if (nodes.ContainsKey(source.Text))
-                    return;
-#endif
                 TreeNode node = (TreeNode)source.Clone();
                 //int idx = nodes.Add(node);
                 //TreeNode node2 = nodes[idx];
@@ -261,11 +259,7 @@ namespace TreeViewTest
 
         private void Btn2_Click(object sender, EventArgs e)
         {
-            Tv1.Nodes.Clear();
-            Tv2.Nodes.Clear();
-            Tv3.Nodes.Clear();
-            Tv4.Nodes.Clear();
-            FillTreeViews();
+            InitializeTreeViews();
         }
 
         private void TestTv1(string key)
