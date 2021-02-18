@@ -25,8 +25,23 @@ Store all modules in a global list by name
 Store all modules in a global list by basename
 Store all modules in a global list by displaytext
 
-// The icon of a folder is always
+Folder GetFolder(TreeView tv) {
+    if(tv == TvModules)
+        return vsf.Modules.Folder;
+    else if(tv == TvGroups)
+        return vsf.Groups.Folder;
+    else if(tv == TvLists)
+        return vsf.Lists.Folder;
+    else if(tv == TvDocuments)
+        return vsf.Documents.Folder;
+    return null;
+}
+
 AddNode(TreeView tv, TreeView src, TreeNode node) {
+    // Identify which Folder to add to
+    Folder folder = new GetFolder(tv);
+    // Identify the subfolder in the folder (including itself) to add to
+    // Add the new element to the node
     NodeTag tag = node.Tag as NodeTag;
     // Test Basename without extension
     if(exists_child_of_parent_with_same_displaytext(TreeView tv, node))
@@ -39,6 +54,8 @@ AddNode(TreeView tv, TreeView src, TreeNode node) {
 
     if(tv == TvGroups) {
         if(tvsrc != TvModules)
+            return;
+        if(dstnode.Tag.Type != group type)
             return;
         // todo test if the type of the node is StandardModule.
         // (otherwise it is potentially a folder to be dropped into)
@@ -54,11 +71,15 @@ AddNode(TreeView tv, TreeView src, TreeNode node) {
     if(tv == TvLists) {
         if(tvsrc != TvModules && tvsrc != TvGroups)
             return;
+        if(dstnode.Tag.Type != list type)
+            return;
         // todo add module or module folder or group
         return;
     }
     if(tv == TvDocuments) {
         if(tvsrc != TvModules && tvsrc != TvGroups && tvsrc != TvLists) 
+            return;
+        if(dstnode.Tag.Type != document type && dstnode.Tag.Type != document folder type)
             return;
         // todo add module or module folder or group or list
         return;
