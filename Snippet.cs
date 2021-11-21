@@ -1,88 +1,156 @@
-Create code for:
-  Add Module
-  Add Group
-  Add List
-  Add Document
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 
-Create warnings when modules in groups, lists or documents does not exist in the modules view.
-Create warnings when groups in lists or documents does not exist in the group view.
-Create warnings when lists in documents does not exist in the list view.
+namespace CS_Html
+{
+    public enum TagTypeEnum
+    {
+        Text = 1,
+        Font = 2,
+        Emphasis = 2,
+        Strong = 3,
+    }
 
-Look at how tag is generated and store everything in it - update via oncollapse/onexpand, via
-new NodeTag.IsOpen property
+    public class Tag
+    {
+        TagTypeEnum tagType;
+        int StartTagBegin = -1;
+        int StartTagEnd = -1;
+        int EndTagBegin = -1;
+        int EndTagEnd = -1;
 
-Update the tag when the folder is open/closed, somehow give the tag an TreeNode.IsOpen, but it
-requires access to the treeview, so the treeview must be added to the tag.
+        string Text = String.Empty;
+        string Color = String.Empty;
+        string FontName = string.Empty;
+        string FontSize = string.Empty;
+        bool Bold = false;
+        bool Italic = false;
+    }
 
-Add displaytext to the tag type.
-Add path to the tag type.
+    public enum SnippetTypeEnum
+    {
+        Text = 0,
+        StartTag = 1,
+        EndTag = 2
+    }
 
-Add the module_path and document_path in the property settings.
+    public class Snippet
+    {
+        public SnippetTypeEnum SnippetType = SnippetTypeEnum.Text;
+        public int FirstChar = -1;
+        public int LastChar = -1;
+        public int Length { get { return (FirstChar != -1 && LastChar != -1) ? LastChar - FirstChar + 1 : 0;  } }
+    } // class
 
-When dropping a node, first update the data then update the view.
+    public class SnippetParser
+    {
+        public string Text;
+        public List<Snippet> SnippetList;
+        public string ErrorMessage;
 
-Store all modules in a global list by name
-Store all modules in a global list by basename
-Store all modules in a global list by displaytext
+        public bool Parse(string Text)
+        {
+            this.Text = Text;
+            SnippetList = new List<Snippet>();
+            ErrorMessage = string.Empty;
+            int idx = 0;
+            while (idx < Text.Length)
+            {
+                Snippet snippet = ParseSnippet(ref idx);
+                if (snippet == null)
+                {
+                    return false;
+                }
+                SnippetList.Add(snippet);
+            }
+            return true;
+        }
 
-Folder GetFolder(TreeView tv) {
-    if(tv == TvModules)
-        return vsf.Modules.Folder;
-    else if(tv == TvGroups)
-        return vsf.Groups.Folder;
-    else if(tv == TvLists)
-        return vsf.Lists.Folder;
-    else if(tv == TvDocuments)
-        return vsf.Documents.Folder;
-    return null;
+        private Snippet ParseSnippet(ref int idx)
+        {
+            char ch = Text[idx];
+            Snippet snippet = new Snippet();
+            snippet.FirstChar = idx;
+            if (ch == '<')
+            {
+                if (++idx >= Text.Length)
+                {
+                    ErrorMessage = "Error: Unterminated start tag: Failed to find '>'.";
+                    return null;
+                }
+                if (Text[idx] == '/')
+                {
+                    snippet.SnippetType = SnippetTypeEnum.EndTag;
+                    if (++idx >= Text.Length)
+                    {
+                        ErrorMessage = "Error: Unterminated end tag: Failed to find '>'.";
+                        return null;
+                    }
+                }
+                else
+                {
+                    snippet.SnippetType = SnippetTypeEnum.StartTag;
+                }
+                int pos = Text.IndexOf('>', idx);
+                if (pos < 0)
+                {
+                    ErrorMessage = "Error: Unterminated " + (snippet.SnippetType == SnippetTypeEnum.StartTag ? "start" : "end") + " tag: Failed to find '>'.";
+                    return null;
+                }
+                snippet.LastChar = pos;
+            }
+            else
+            {
+                snippet.SnippetType = SnippetTypeEnum.Text;
+                int pos = Text.IndexOf('<', idx);
+                if (pos < 0)
+                {
+                    snippet.LastChar = Text.Length - 1;
+                }
+                else
+                {
+                    snippet.LastChar = pos - 1;
+                }
+            }
+            idx = snippet.LastChar + 1;
+            return snippet;
+        }
+    } // class
+
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            const string indent = "    ";
+            SnippetParser parser = new SnippetParser();
+            string[] tests =
+            {
+                "An example with<b>a tag and a <i>subtag</i> inside it</b> and some text after",
+                "<b>a tag and a <i>subtag</i> inside it</b>",
+                "<b>a tag and a <i>subtag</i> inside it</b",
+                "<b>a tag and a <isubtag</i> inside it</b>",
+            };
+
+            foreach (string test in tests)
+            {
+                Debug.WriteLine("Parsing:");
+                Debug.WriteLine(indent + '"' + test + '"');
+                Debug.WriteLine("Result:");
+                bool result = parser.Parse(test);5555555555555a
+                if (result)
+                {
+                    foreach (Snippet snippet in parser.SnippetList)
+                    {
+                        string substring = parser.Text.Substring(snippet.FirstChar, snippet.Length);
+                        Debug.WriteLine(indent + '"' + substring + '"');
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine(indent + parser.ErrorMessage);
+                }
+            }
+        }
+    }
 }
-
-AddNode(TreeView tv, TreeView src, TreeNode node) {
-    // Identify which Folder to add to
-    Folder folder = new GetFolder(tv);
-    // Identify the subfolder in the folder (including itself) to add to
-    // Add the new element to the node
-    NodeTag tag = node.Tag as NodeTag;
-    // Test Basename without extension
-    if(exists_child_of_parent_with_same_displaytext(TreeView tv, node))
-       return;
-
-    if(tv == TvModules) {
-        // Files dropped to the modules treeview (from explorer) ... handle elswhere
-        return;
-    }
-
-    if(tv == TvGroups) {
-        if(tvsrc != TvModules)
-            return;
-        if(dstnode.Tag.Type != group type)
-            return;
-        // todo test if the type of the node is StandardModule.
-        // (otherwise it is potentially a folder to be dropped into)
-        //
-        // todo add the node
-        // todo you can not add to a module folder
-        // todo add module or module folder
-        // todo add option to turn copies of a module folder into a group in the group view.
-        // todo add option to turn copies of a module folder into a list in the list view.
-        // todo add option to turn copies of a module folder into a document folder in the document view.
-        return;
-    }
-    if(tv == TvLists) {
-        if(tvsrc != TvModules && tvsrc != TvGroups)
-            return;
-        if(dstnode.Tag.Type != list type)
-            return;
-        // todo add module or module folder or group
-        return;
-    }
-    if(tv == TvDocuments) {
-        if(tvsrc != TvModules && tvsrc != TvGroups && tvsrc != TvLists) 
-            return;
-        if(dstnode.Tag.Type != document type && dstnode.Tag.Type != document folder type)
-            return;
-        // todo add module or module folder or group or list
-        return;
-    }
-}
-
